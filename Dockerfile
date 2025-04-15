@@ -14,12 +14,13 @@ RUN apt-get update && apt-get install -y \
     # Add any other system dependencies required by unstructured[all-docs]
  && rm -rf /var/lib/apt/lists/*
 
-# Copy the requirements file into the container at /app
-COPY requirements.txt .
+# Copy the requirements files into the container at /app
+COPY requirements.txt requirements.lock.txt ./
 
-# Install any needed packages specified in requirements.txt
-# Use --no-cache-dir to reduce image size
-RUN pip install --no-cache-dir -r requirements.txt
+# Install UV package manager and use it to install dependencies from the lock file
+# This ensures exact version matching for reproducible builds
+RUN pip install --no-cache-dir uv && \
+    uv pip install --no-cache-dir -r requirements.lock.txt
 
 # Copy the rest of the application code into the container at /app
 COPY . .
