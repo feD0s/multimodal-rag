@@ -1,0 +1,17 @@
+langchain
+openai
+langchain-openai
+langchain-chroma
+langchain-experimental
+nltk
+tesseract-ocr
+unstructured[all-docs]
+pillow
+pydantic
+lxml
+chromadb
+tiktoken
+fastapi
+uvicorn[standard]
+streamlit
+requests
