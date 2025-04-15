@@ -50,33 +50,31 @@ class VectorStoreError(RAGProcessingError):
 # --- Text and Table Summarization ---
 def generate_text_summaries(texts, tables, summarize_texts=False):
     """
-    Функция для создания суммаризации текста и таблиц с использованием модели GPT.
+    Function for creating text and table summaries using the GPT model.
 
-    Аргументы:
-    texts: Список строк (тексты), которые нужно суммировать.
-    tables: Список строк (таблицы), которые нужно суммировать.
-    summarize_texts: Булев флаг, указывающий, нужно ли суммировать текстовые элементы.
+    Arguments:
+    texts: List of strings (texts) to summarize.
+    tables: List of strings (tables) to summarize.
+    summarize_texts: Boolean flag indicating whether to summarize text elements.
 
-    Возвращает:
-    Два списка: text_summaries (суммаризации текстов) и table_summaries (суммаризации таблиц).
+    Returns:
+    Two lists: text_summaries (text summaries) and table_summaries (table summaries).
     """
 
-    # Шаблон для запроса к модели. Задача ассистента - создать оптимизированное описание для поиска.
+    # Template for the model prompt. Assistant's task is to create an optimized description for search.
     prompt_text = """ Create summarization for the {element} """
 
-    # Создаем шаблон запроса на основе строки с шаблоном
+    # Create a prompt template based on the template string
     prompt = ChatPromptTemplate.from_template(prompt_text)
 
-    # Создаем модель для генерации суммаризаций. Устанавливаем температуру 0 для детерминированных ответов.
+    # Create a model for generating summaries. Set temperature to 0 for deterministic responses.
     model = ChatOpenAI(temperature=0, model="gpt-4o-mini")
 
-    # Определяем цепочку обработки запросов: сначала шаблон запроса, затем модель, затем парсер выходных данных
+    # Define the request processing chain: first prompt template, then model, then output parser
     summarize_chain = {"element": lambda x: x} | prompt | model | StrOutputParser()
 
-    text_summaries = []  # Список для хранения суммаризаций текстов
-    table_summaries = []  # Список для хранения суммаризаций таблиц
-
-    # Если есть текстовые элементы и требуется их суммирование
+    text_summaries = []  # List for storing text summaries
+    table_summaries = []  # List for storing table summaries    # If there are text elements and summarization is required
     if texts and summarize_texts:
         try:
             text_summaries = summarize_chain.batch(texts, {"max_concurrency": 5})
@@ -86,7 +84,7 @@ def generate_text_summaries(texts, tables, summarize_texts=False):
     elif texts:
         text_summaries = texts
 
-    # Если есть таблицы, выполняем их суммирование
+    # If there are tables, perform their summarization
     if tables:
         try:
             table_summaries = summarize_chain.batch(tables, {"max_concurrency": 5})
@@ -100,15 +98,15 @@ def generate_text_summaries(texts, tables, summarize_texts=False):
 # --- PDF Processing ---
 def extract_pdf_elements(path, fname, image_output_path):
     """
-    Функция для извлечения различных элементов из PDF-файла.
+    Function for extracting various elements from a PDF file.
 
-    Аргументы:
-    path: Строка, содержащая путь к директории PDF-файла.
-    fname: Строка, содержащая имя PDF-файла.
-    image_output_path: Строка, путь для сохранения извлеченных изображений.
+    Arguments:
+    path: String containing the path to the PDF file directory.
+    fname: String containing the name of the PDF file.
+    image_output_path: String, path for saving extracted images.
 
-    Возвращает:
-    Список объектов типа `unstructured.documents.elements`.
+    Returns:
+    List of objects of type `unstructured.documents.elements`.
     """
     try:
         return partition_pdf(
@@ -128,13 +126,13 @@ def extract_pdf_elements(path, fname, image_output_path):
 
 def categorize_elements(raw_pdf_elements):
     """
-    Функция для категоризации извлеченных элементов из PDF-файла.
+    Function for categorizing extracted elements from a PDF file.
 
-    Аргументы:
-    raw_pdf_elements: Список объектов типа `unstructured.documents.elements`.
+    Arguments:
+    raw_pdf_elements: List of objects of type `unstructured.documents.elements`.
 
-    Возвращает:
-    Два списка: texts (текстовые элементы) и tables (таблицы).
+    Returns:
+    Two lists: texts (text elements) and tables (tables).
     """
     tables = []
     texts = []
@@ -149,13 +147,13 @@ def categorize_elements(raw_pdf_elements):
 # --- Image Processing ---
 def encode_image(image_path):
     """
-    Функция для кодирования изображения в формат base64.
+    Function for encoding an image to base64 format.
 
-    Аргументы:
-    image_path: Строка, путь к изображению, которое нужно закодировать.
+    Arguments:
+    image_path: String, path to the image to encode.
 
-    Возвращает:
-    Закодированное в формате base64 изображение в виде строки или None при ошибке.
+    Returns:
+    Base64 encoded image as a string or None on error.
     """
     try:
         with open(image_path, "rb") as image_file:
@@ -170,14 +168,14 @@ def encode_image(image_path):
 
 def image_summarize(img_base64, prompt):
     """
-    Функция для получения суммаризации изображения с использованием GPT модели.
+    Function for getting an image summary using the GPT model.
 
-    Аргументы:
-    img_base64: Строка, изображение закодированное в формате base64.
-    prompt: Строка, запрос для модели GPT.
+    Arguments:
+    img_base64: String, image encoded in base64 format.
+    prompt: String, query for the GPT model.
 
-    Возвращает:
-    Суммаризация изображения или None при ошибке.
+    Returns:
+    Image summary or None on error.
     """
     try:
         chat = ChatOpenAI(model="gpt-4o-mini", max_tokens=2000)
@@ -202,13 +200,13 @@ def image_summarize(img_base64, prompt):
 
 def generate_img_summaries(image_dir_path):
     """
-    Функция для генерации суммаризаций изображений из указанной директории.
+    Function for generating summaries of images from a specified directory.
 
-    Аргументы:
-    image_dir_path: Строка, путь к директории с изображениями формата .jpg.
+    Arguments:
+    image_dir_path: String, path to the directory with .jpg format images.
 
-    Возвращает:
-    Два списка: img_base64_list и image_summaries.
+    Returns:
+    Two lists: img_base64_list and image_summaries.
     """
     img_base64_list = []
     image_summaries = []
@@ -240,19 +238,19 @@ def create_multi_vector_retriever(
     vectorstore, text_summaries, texts, table_summaries, tables, image_summaries, images
 ):
     """
-    Функция для создания ретривера, который может извлекать данные из разных источников.
+    Function for creating a retriever that can extract data from different sources.
 
-    Аргументы:
-    vectorstore: Векторное хранилище.
-    text_summaries: Список суммаризаций текстов.
-    texts: Список исходных текстов.
-    table_summaries: Список суммаризаций таблиц.
-    tables: Список исходных таблиц.
-    image_summaries: Список суммаризаций изображений.
-    images: Список изображений в формате base64.
+    Arguments:
+    vectorstore: Vector storage.
+    text_summaries: List of text summaries.
+    texts: List of original texts.
+    table_summaries: List of table summaries.
+    tables: List of original tables.
+    image_summaries: List of image summaries.
+    images: List of images in base64 format.
 
-    Возвращает:
-    Созданный ретривер.
+    Returns:
+    The created retriever.
     """
 
     store = InMemoryStore()
@@ -293,14 +291,14 @@ def create_multi_vector_retriever(
 # --- Image/Text Utilities ---
 def looks_like_base64(sb):
     """
-    Проверяет, выглядит ли строка как base64.
+    Checks if a string looks like base64.
     """
     return re.match("^[A-Za-z0-9+/]+[=]{0,2}$", sb) is not None
 
 
 def is_image_data(b64data):
     """
-    Проверяет, является ли base64 данные изображением.
+    Checks if base64 data is an image.
     """
     image_signatures = {
         b"\xFF\xD8\xFF": "jpg",
@@ -320,7 +318,7 @@ def is_image_data(b64data):
 
 def resize_base64_image(base64_string, size=(128, 128)):
     """
-    Изменяет размер изображения, закодированного в формате base64.
+    Resizes an image encoded in base64 format.
     """
     try:
         img_data = base64.b64decode(base64_string)
@@ -337,7 +335,7 @@ def resize_base64_image(base64_string, size=(128, 128)):
 
 def split_image_text_types(docs):
     """
-    Разделяет документы на изображения и текстовые данные.
+    Separates documents into images and text data.
     """
     b64_images = []
     texts = []
@@ -358,7 +356,7 @@ def split_image_text_types(docs):
 # --- Prompt Formatting ---
 def img_prompt_func(data_dict):
     """
-    Формирует запрос к модели с учетом изображений и текста.
+    Forms a prompt for the model taking into account images and text.
     """
     formatted_texts = "\n".join(data_dict["context"]["texts"])
     messages = []
@@ -374,8 +372,8 @@ def img_prompt_func(data_dict):
     text_message = {
         "type": "text",
         "text": (
-            f"Вопрос пользователя: {data_dict['question']}\n\n"
-            "Текст и / или таблицы:\n"
+            f"User question: {data_dict['question']}\n\n"
+            "Text and/or tables:\n"
             f"{formatted_texts}"
         ),
     }
@@ -386,7 +384,7 @@ def img_prompt_func(data_dict):
 # --- RAG Chain Definition ---
 def multi_modal_rag_chain(retriever):
     """
-    Создает RAG цепочку для работы с мультимодальными запросами.
+    Creates a RAG chain for working with multimodal queries.
     """
     model = ChatOpenAI(temperature=0, model="gpt-4o-mini", max_tokens=8192)
 
