@@ -254,7 +254,7 @@ with st.sidebar:
         st.session_state.session_id = None
         st.session_state.processing_error = None
         st.session_state.answer_history = []
-        st.experimental_rerun()
+        st.rerun()
         
 # Footer
 st.markdown("---")
