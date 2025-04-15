@@ -15,7 +15,7 @@ fastapi
 uvicorn[standard]
 streamlit
 requests
-
+huggingface_hub[hf_xet]  # Optimized model downloading from Hugging Face
 # Development dependencies
 pytest
 pytest-asyncio
