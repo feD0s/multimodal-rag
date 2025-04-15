@@ -20,7 +20,7 @@ COPY requirements.txt requirements.lock.txt ./
 # Install UV package manager and use it to install dependencies from the lock file
 # This ensures exact version matching for reproducible builds
 RUN pip install --no-cache-dir uv && \
-    uv pip install --no-cache-dir -r requirements.lock.txt
+    uv pip install --system --no-cache-dir -r requirements.lock.txt
 
 # Copy the rest of the application code into the container at /app
 COPY . .
