@@ -24,12 +24,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code into the container at /app
 COPY . .
 
-# Make port 8000 available to the world outside this container
-EXPOSE 8000
+# Make port 8000 available for FastAPI and 8501 for Streamlit
+EXPOSE 8000 8501
+
+# Make the startup script executable
+RUN chmod +x start.sh
 
 # Define environment variable (optional, can be set at runtime)
 # ENV OPENAI_API_KEY=your_api_key_here
 
-# Run main.py when the container launches
-# Use 0.0.0.0 to make it accessible from outside the container
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the startup script when the container launches
+CMD ["./start.sh"]
