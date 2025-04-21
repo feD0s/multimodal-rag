@@ -140,4 +140,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ---
 
-*Built with LangChain, OpenAI, and modern Python technologies.*
+*Built with Sonnet 3.7 and Gemini 2.5 Pro*
