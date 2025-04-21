@@ -84,6 +84,7 @@ class QueryRequest(BaseModel):
 
 class QueryResponse(BaseModel):
     answer: str
+    images: Optional[List[str]] = None  # Add field for images
     query_time: float
 
 class ErrorResponse(BaseModel):
@@ -198,14 +199,15 @@ async def query_documents(request: QueryRequest):
         
         # Create and invoke RAG chain
         chain = multi_modal_rag_chain(retriever)
-        result = chain.invoke(request.question)
+        result_dict = chain.invoke(request.question)  # Result is now a dict
         
         # Calculate query time
         query_time = time.time() - start_time
         logger.info(f"Query processed in {query_time:.2f} seconds")
         
         return QueryResponse(
-            answer=result,
+            answer=result_dict.get("answer", ""),  # Extract answer
+            images=result_dict.get("images", []),  # Extract images
             query_time=query_time
         )
     except Exception as e:
@@ -218,24 +220,6 @@ async def query_documents(request: QueryRequest):
         # Clean up API key
         if "OPENAI_API_KEY" in os.environ:
             del os.environ["OPENAI_API_KEY"]
-
-@app.post("/health")
-async def health_check():
-    """Endpoint to check if the API and its dependencies are working."""
-    try:
-        # Check if OpenAI API key environment variable is set (not its value)
-        api_key_set = "OPENAI_API_KEY" in os.environ
-        return {
-            "status": "ok",
-            "api_key_configured": api_key_set,
-            "temp_directory": os.path.exists(TEMP_DIR)
-        }
-    except Exception as e:
-        logger.error(f"Health check failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Health check failed: {str(e)}"
-        )
 
 @app.post("/process_documents", response_model=ProcessDocumentsResponse)
 async def process_documents(
@@ -419,7 +403,9 @@ async def process_documents(
         if question.strip():
             try:
                 chain = multi_modal_rag_chain(retriever)
-                result = chain.invoke(question)
+                # Invoke returns a dict, but we only need the answer for the initial summary here
+                result_dict = chain.invoke(question)
+                result = result_dict.get("answer", "Could not generate summary.")
                 logger.info("Initial summary generated successfully.")
             except Exception as e:
                 logger.error(f"Error generating initial summary: {e}")
@@ -434,7 +420,7 @@ async def process_documents(
         
         return ProcessDocumentsResponse(
             session_id=session_id,
-            summary=result,
+            summary=result,  # Return only the text summary here
             processing_time=processing_time,
             source_count=source_counts
         )

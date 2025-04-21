@@ -19,7 +19,7 @@ from langchain_community.vectorstores import Chroma
 from langchain.retrievers.multi_vector import MultiVectorRetriever
 from langchain.storage import InMemoryStore
 from langchain_core.documents import Document
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough, RunnableParallel
 from langchain_core.messages import HumanMessage
 
 # Other necessary libraries
@@ -203,7 +203,7 @@ def generate_img_summaries(image_dir_path):
     Function for generating summaries of images from a specified directory.
 
     Arguments:
-    image_dir_path: String, path to the directory with .jpg format images.
+    image_dir_path: String, path to the directory with image files.
 
     Returns:
     Two lists: img_base64_list and image_summaries.
@@ -211,13 +211,15 @@ def generate_img_summaries(image_dir_path):
     img_base64_list = []
     image_summaries = []
     prompt = """Create summarization for the image provided."""
+    supported_formats = (".jpg", ".jpeg", ".png") # Add more formats if needed
 
     if not os.path.isdir(image_dir_path):
         logger.warning(f"Image directory not found: {image_dir_path}")
         return img_base64_list, image_summaries
 
     for img_file in sorted(os.listdir(image_dir_path)):
-        if img_file.lower().endswith(".jpg"):
+        # Check for multiple supported image formats
+        if img_file.lower().endswith(supported_formats):
             img_path = os.path.join(image_dir_path, img_file)
             base64_image = encode_image(img_path)
             if base64_image:
@@ -385,17 +387,32 @@ def img_prompt_func(data_dict):
 def multi_modal_rag_chain(retriever):
     """
     Creates a RAG chain for working with multimodal queries.
+    Returns a dictionary containing the text answer and relevant images.
     """
     model = ChatOpenAI(temperature=0, model="gpt-4o-mini", max_tokens=8192)
 
-    chain = (
-        {
-            "context": retriever | RunnableLambda(split_image_text_types),
-            "question": RunnablePassthrough(),
-        }
-        | RunnableLambda(img_prompt_func)
+    # Chain to retrieve context and split into text/images
+    retrieve_and_split = retriever | RunnableLambda(split_image_text_types)
+
+    # Chain to generate the final answer using the model
+    generate_answer = (
+        RunnableLambda(img_prompt_func)
         | model
         | StrOutputParser()
+    )
+
+    # Parallel chain to run retrieval/splitting and answer generation
+    # Passes the retrieved images through alongside the generated answer
+    chain = RunnableParallel(
+        {
+            "context": retrieve_and_split,
+            "question": RunnablePassthrough()
+        }
+    ) | RunnableParallel(
+        {
+            "answer": generate_answer,
+            "images": lambda x: x["context"]["images"] # Pass images from the context
+        }
     )
 
     return chain

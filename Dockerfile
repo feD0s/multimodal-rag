@@ -1,12 +1,11 @@
 # Dockerfile
-# Use an official Python runtime as a parent image
-FROM python:3.11-slim
+# Use an official Python runtime based on Debian Bookworm
+FROM python:3.11-bookworm
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies required by tesseract and unstructured
-# Note: This is for Debian/Ubuntu based images. Adjust if using a different base.
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     poppler-utils \
@@ -25,11 +24,11 @@ RUN pip install --no-cache-dir uv && \
 # Copy the rest of the application code into the container at /app
 COPY . .
 
+# Convert start.sh line endings to Unix format using sed and make it executable
+RUN sed -i 's/\r$//' start.sh && chmod +x start.sh
+
 # Make port 8000 available for FastAPI and 8501 for Streamlit
 EXPOSE 8000 8501
-
-# Make the startup script executable
-RUN chmod +x start.sh
 
 # Define environment variable (optional, can be set at runtime)
 # ENV OPENAI_API_KEY=your_api_key_here
