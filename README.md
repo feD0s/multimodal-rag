@@ -2,8 +2,6 @@
 
 A robust multimodal Retrieval Augmented Generation (RAG) system capable of processing text, tables, and images from various document formats to answer user queries with enhanced context and accuracy.
 
-![RAG Architecture](https://raw.githubusercontent.com/langchain-ai/langchainjs/main/docs/img/rag_indexing.jpg)
-
 ## 🚀 Features
 
 - **Multimodal Processing**: Handles text, tables, and images from PDFs and image files
@@ -57,39 +55,13 @@ The system consists of three main components:
 2. Build and run the Docker container:
    ```bash
    docker build -t multimodal-rag-app .
-   docker run -p 8000:8000 -p 8501:8501 -e OPENAI_API_KEY=your_api_key_here multimodal-rag-app
+   docker run -p 8000:8000 -p 8501:8501
    ```
 
 3. Access the applications:
    - FastAPI backend: http://localhost:8000
    - Streamlit frontend: http://localhost:8501
 
-### Manual Setup
-
-1. Install dependencies:
-   ```bash
-   # Using UV (faster)
-   pip install uv
-   uv venv
-   uv pip install -r requirements.txt
-   
-   # Or using standard pip
-   pip install -r requirements.txt
-   ```
-
-2. Set your OpenAI API key:
-   ```bash
-   export OPENAI_API_KEY=your_api_key_here
-   ```
-
-3. Run the applications:
-   ```bash
-   # Start FastAPI backend
-   uvicorn main:app --host 0.0.0.0 --port 8000
-   
-   # Start Streamlit frontend (in another terminal)
-   streamlit run streamlit_app.py
-   ```
 
 ## 📚 API Documentation
 
