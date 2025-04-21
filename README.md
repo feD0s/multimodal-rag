@@ -67,49 +67,74 @@ The system consists of three main components:
 
 ### REST API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | API status and information |
-| `/health` | POST | Health check endpoint |
-| `/process` | POST | Process documents and answer questions |
+| Endpoint             | Method | Description                                      |
+|----------------------|--------|--------------------------------------------------|
+| `/`                  | GET    | API status and information                       |
+| `/health`            | POST   | Health check endpoint                            |
+| `/process_documents` | POST   | Process uploaded documents and get a session ID  |
+| `/query`             | POST   | Ask a question using an existing session ID      |
 
-### Request Format
+### Request Format (`/process_documents`)
+
+This endpoint expects `multipart/form-data`:
+- `files`: One or more file uploads (PDF, JPG, PNG, etc.)
+- `api_key`: Your OpenAI API key (form field)
+- `question`: An initial question to generate a summary (form field, optional)
+
+### Response Format (`/process_documents`)
 ```json
 {
-  "files": [binary_file],
-  "api_key": "your_openai_api_key",
-  "question": "What information is in these documents?"
+  "session_id": "unique-session-identifier",
+  "summary": "Optional initial summary of the documents...",
+  "processing_time": 15.7,
+  "source_count": {
+    "pdf_files": 1,
+    "image_files": 2,
+    "text_chunks": 50,
+    "tables": 3,
+    "images": 5
+  }
 }
 ```
 
-### Response Format
+### Request Format (`/query`)
+
+This endpoint expects `application/json`:
 ```json
 {
-  "answer": "Detailed answer based on document content...",
-  "processing_time": "2.5s",
-  "source_count": {
-    "texts": 5,
-    "tables": 2,
-    "images": 3
-  }
+  "api_key": "your_openai_api_key",
+  "question": "What specific information is in the documents?",
+  "session_id": "unique-session-identifier-from-process_documents"
+}
+```
+
+### Response Format (`/query`)
+```json
+{
+  "answer": "Detailed answer based on document content and question...",
+  "images": [
+    "base64_encoded_image_string_1", 
+    "base64_encoded_image_string_2"
+  ],
+  "query_time": 3.1
 }
 ```
 
 ## 🔍 Usage Examples
 
-1. **Upload a PDF**:
-   - Use the Streamlit interface to upload a PDF document
-   - The system extracts text, tables, and images
+1. **Upload Files & Start Session (Streamlit or API)**:
+   - Use the Streamlit interface or send a POST request to `/process_documents` with your files and API key.
+   - Receive a `session_id` and an initial summary.
 
-2. **Ask Questions**:
-   - Type your question in the input field
-   - The system retrieves relevant context and generates an answer
-   - View the response with information from all modalities
+2. **Ask Questions (Streamlit or API)**:
+   - In Streamlit: Use the input field that appears after processing.
+   - Via API: Send a POST request to `/query` with your `session_id`, API key, and question.
+   - View the response, including text answers and relevant images.
 
-3. **API Integration**:
-   - Send POST requests to the `/process` endpoint
-   - Include document files and your question
-   - Receive structured answers for integration with other systems
+3. **API Integration Workflow**:
+   - **Step 1:** Send POST request to `/process_documents` with files.
+   - **Step 2:** Store the returned `session_id`.
+   - **Step 3:** Send POST requests to `/query` using the stored `session_id` for subsequent questions.
 
 ## 🧪 Testing
 
